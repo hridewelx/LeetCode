@@ -1,0 +1,31 @@
+import express from "express";
+import 'dotenv/config'
+import connectMongoDB from "./config/mongoDB.js";
+import cookieParser from "cookie-parser";
+import authenticationRouter from "./routes/userAuthenticationRoutes.js";
+import redisClient from "./config/redisDB.js";
+import problemRoutes from "./routes/problemsRoutes.js";
+
+const app = express();
+app.use(express.json());
+app.use(cookieParser());
+app.use("/user", authenticationRouter);
+app.use("/problems", problemRoutes);
+
+async function connectDatabase() {
+    try {
+        await Promise.all([
+            connectMongoDB(),
+            redisClient.connect()
+        ]);
+        console.log("Database connected");
+
+        app.listen(process.env.PORT, () => {
+            console.log(`Server running on port ${process.env.PORT}`);
+        });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+connectDatabase();
