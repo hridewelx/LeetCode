@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { Schema } from "mongoose";
 
-const userSchema = new Schema ({
+const userSchema = new Schema({
     firstName: {
         type: String,
         required: true,
@@ -33,6 +33,16 @@ const userSchema = new Schema ({
         type: String,
         enum: ['user', 'admin'],
         default: 'user'
+    },
+    problemsSolved: {
+        type: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: 'problem'
+            }
+        ],
+        default: [],
+        unique: true
     },
     password: {
         type: String,

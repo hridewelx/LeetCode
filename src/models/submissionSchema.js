@@ -3,12 +3,12 @@ import { Schema } from "mongoose";
 
 const submissionSchema = new Schema ({
     userId: {
-        type: Schema.type.ObjectId,
+        type: Schema.Types.ObjectId,
         required: true,
         trim: true
     },
     problemId: {
-        type: Schema.type.ObjectId,
+        type: Schema.Types.ObjectId,
         required: true,
         trim: true
     },
@@ -27,7 +27,7 @@ const submissionSchema = new Schema ({
         type: String,
         required: true,
         trim: true,
-        enum: ["Accepted", "Pending", "Rejected", "Running", "Compiling", "Error", "TimeLimitExceeded", "MemoryLimitExceeded", "RuntimeError", "CompilationError"]
+        enum: ["Pending", "Accepted", "Wrong Answer", "Time Limit Exceeded", "Compilation Error", "Runtime Error (SIGSEGV)", "Runtime Error (SIGXFSZ)", "Runtime Error (SIGFPE)", "Runtime Error (SIGABRT)", "Runtime Error (NZEC)", "Runtime Error (Other)", "Internal Error", "Exec Format Error"]
     },
     runTime: {
         type: Number,
@@ -43,12 +43,12 @@ const submissionSchema = new Schema ({
     },
     errorMessage: {
         type: String,
-        default: "",
+        default: null,
         trim: true
     },
     testCasePassed: {
         type: Number,
-        required: true,
+        // required: true,
         trim: true,
         default: 0
     },

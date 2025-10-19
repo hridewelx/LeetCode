@@ -5,12 +5,14 @@ import cookieParser from "cookie-parser";
 import authenticationRouter from "./routes/userAuthenticationRoutes.js";
 import redisClient from "./config/redisDB.js";
 import problemRoutes from "./routes/problemsRoutes.js";
+import problemSubmissionRoutes from "./routes/problemSubmissionRoutes.js";
 
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use("/user", authenticationRouter);
 app.use("/problems", problemRoutes);
+app.use("/submissions", problemSubmissionRoutes);
 
 async function connectDatabase() {
     try {

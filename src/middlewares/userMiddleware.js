@@ -26,7 +26,7 @@ const userMiddleware = async(req, res, next) => {
             return res.status(401).json({message: "User is blocked"});
         }
 
-        req.user = user;
+        req.user = user; 
         next();
     } catch (error) {
         console.log(error);
