@@ -11,6 +11,8 @@ __pycache__/
 .env
 *.env
 
+/src/test/
+
 # Ignore system files
 .DS_Store
 Thumbs.db

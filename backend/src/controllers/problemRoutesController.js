@@ -152,19 +152,18 @@ const getAllProblems = async (req, res) => {
 const individualSolvedProblems = async (req, res) => {
     try {
         const userId = req.user._id;
-        let problem = await User.findById(userId).populate({
+        let problems = await User.findById(userId).populate({
             path: "problemsSolved",
             select: "_id title difficulty tags"
         });
-        if (!problem) {
+        if (!problems) {
             return res.status(404).json({ message: "Problem not found" });
         }
-        return res.status(200).json({ message: "Problem fetched successfully", problem: problem.problemsSolved });
+        return res.status(200).json({ message: "Problem fetched successfully", problems: problems.problemsSolved });
     } catch (error) {
         console.log(error);
         return res.status(400).json({ message: "Problem fetch failed" });
     }
-
 }
 
 const individualProblemSubmissions = async (req, res) => {

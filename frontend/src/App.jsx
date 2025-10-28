@@ -5,6 +5,7 @@ import Homepage from "./pages/Homepage";
 import { useDispatch, useSelector } from "react-redux";
 import { checkAuthenticatedUser } from "./authenticationSlicer"
 import { useEffect } from "react";
+import ProblemSet from "./pages/ProblemSet";
 
 function App(){
 
@@ -16,7 +17,7 @@ function App(){
   }, [dispatch]);
 
   return(
-    console.log(" isAuthenticated", isAuthenticated),
+    // console.log(" isAuthenticated", isAuthenticated),
   <>
     <Routes>
       <Route path="/" element={ isAuthenticated ? <Homepage></Homepage> : <Navigate to="/login"></Navigate> }></Route>
@@ -24,6 +25,7 @@ function App(){
       <Route path="/login" element={ <Login></Login> }></Route>
       {/* <Route path="/signup" element={ isAuthenticated ? <Navigate to="/"></Navigate> : <Signup></Signup> }></Route> */}
       <Route path="/signup" element={ <Signup></Signup> }></Route>
+      <Route path="/problemset" element={ <ProblemSet></ProblemSet> }></Route>
     </Routes>
   </>
   )
