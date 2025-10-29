@@ -1,0 +1,8 @@
+/* Hide the default resize handle */
+.hide-resize-handle::-webkit-resizer {
+  display: none;
+}
+
+.hide-resize-handle {
+  resize: vertical;
+}

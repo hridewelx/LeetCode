@@ -6,14 +6,14 @@ const userSchema = new Schema({
     firstName: {
         type: String,
         required: true,
-        minLength: 3,
-        maxLength: 30,
+        minlength: [3, "First name must be at least 3 characters"],
+        maxlength: [30, "First name cannot exceed 30 characters"],
         trim: true
     },
     lastName: {
         type: String,
-        minLength: 3,
-        maxLength: 30,
+        minlength: [3, "Last name must be at least 3 characters"],
+        maxlength: [30, "Last name cannot exceed 30 characters"],
         trim: true
     },
     emailId: {
@@ -55,8 +55,8 @@ const userSchema = new Schema({
     timestamps: true
 })
 
-userSchema.post("findOneAndDelete", async(userInfo) => {
-    await Submission.deleteMany({userId: userInfo._id}).exec();
+userSchema.post("findOneAndDelete", async (userInfo) => {
+    await Submission.deleteMany({ userId: userInfo._id }).exec();
 })
 
 const User = mongoose.model('user', userSchema);

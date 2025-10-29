@@ -1,3 +1,4 @@
+import "./App.css";
 import {Routes, Route, Navigate } from "react-router";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -6,6 +7,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { checkAuthenticatedUser } from "./authenticationSlicer"
 import { useEffect } from "react";
 import ProblemSet from "./pages/ProblemSet";
+import AdminPanel from "./pages/AdminPanel";
+// import DraggableResizableTextarea from "./pages/DraggableResizableTextarea";
 
 function App(){
 
@@ -17,7 +20,6 @@ function App(){
   }, [dispatch]);
 
   return(
-    // console.log(" isAuthenticated", isAuthenticated),
   <>
     <Routes>
       <Route path="/" element={ isAuthenticated ? <Homepage></Homepage> : <Navigate to="/login"></Navigate> }></Route>
@@ -26,6 +28,10 @@ function App(){
       {/* <Route path="/signup" element={ isAuthenticated ? <Navigate to="/"></Navigate> : <Signup></Signup> }></Route> */}
       <Route path="/signup" element={ <Signup></Signup> }></Route>
       <Route path="/problemset" element={ <ProblemSet></ProblemSet> }></Route>
+      <Route path="/adminpanel" element={ <AdminPanel></AdminPanel> }></Route>
+      {/* <Route path="/test" element={ <DraggableResizableTextarea></DraggableResizableTextarea> }></Route> */}
+
+      {console.log(" isAuthenticated", isAuthenticated)}
     </Routes>
   </>
   )
