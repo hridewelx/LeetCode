@@ -9,7 +9,7 @@ const delayOneSecond = async () => {
 const getLanguageId = (language) => {
   const languageId = {
     "c": 50,
-    "c++": 54,
+    "cpp": 54,
     "java": 62,
     "javascript": 102,
     "python": 109
@@ -25,7 +25,7 @@ const submitBatch = async (createSubmissionBatch) => {
       base64_encoded: 'false'
     },
     headers: {
-      'x-rapidapi-key': process.env.JUDGE1_RAPIDAPI_KEY,
+      'x-rapidapi-key': process.env.JUDGE0_RAPIDAPI_KEY,
       'x-rapidapi-host': process.env.RAPIDAPI_HOST,
       'Content-Type': 'application/json'
     },
@@ -56,7 +56,7 @@ const submitToken = async (responseTokenData) => {
       fields: '*'
     },
     headers: {
-      'x-rapidapi-key': process.env.JUDGE1_RAPIDAPI_KEY,
+      'x-rapidapi-key': process.env.JUDGE0_RAPIDAPI_KEY,
       'x-rapidapi-host': process.env.RAPIDAPI_HOST
     }
   };

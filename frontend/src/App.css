@@ -6,3 +6,29 @@
 .hide-resize-handle {
   resize: vertical;
 }
+
+/* Prevent text selection during resize */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Ensure proper cursor during resize */
+.resizing {
+  cursor: col-resize !important;
+}
+
+/* Timer Input */
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}

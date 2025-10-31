@@ -154,7 +154,9 @@ const checkAuthenticatedUser = (req, res) => {
         const reply = {
             _id: req.user._id,
             firstName: req.user.firstName,
-            emailId: req.user.emailId
+            lastName: req.user?.lastName || "",
+            emailId: req.user.emailId,
+            role: req.user.role
         }
         res.status(200).json({
             user: reply,

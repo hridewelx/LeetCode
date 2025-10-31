@@ -125,7 +125,7 @@ const getProblemById = async (req, res) => {
             return res.status(400).json({ message: "Problem id is required" });
         }
         // const problem = await Problem.findById(id).select("-referenceSolution -hiddenTestCases -problemCreator -__v");
-        const problem = await Problem.findById(id).select("_id title description difficulty tags visibleTestCases boilerplateCode createdAt updatedAt");
+        const problem = await Problem.findById(id).select("_id title description difficulty tags visibleTestCases hiddenTestCases boilerplateCode createdAt updatedAt");
         if (!problem) {
             return res.status(404).json({ message: "Problem not found" });
         }

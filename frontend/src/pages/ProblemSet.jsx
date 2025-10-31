@@ -6,7 +6,7 @@ import { NavLink } from "react-router";
 
 function ProblemSet() {
   const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.authentication);
+  const { user, isAuthenticated } = useSelector((state) => state.authentication);
   const [problems, setProblems] = useState([]);
   const [solvedProblems, setSolvedProblems] = useState([]);
   const [filters, setFilters] = useState({
@@ -15,11 +15,13 @@ function ProblemSet() {
     status: "all",
   });
 
+  console.log("User", user);
+
   useEffect(() => {
     const fetchProblems = async () => {
       try {
         const { data } = await axiosClient.get("/problems/problemset");
-        console.log("fetched problems", data);
+        // console.log("fetched problems", data);
         setProblems(data.problems);
       } catch (error) {
         console.error("Error fetching problems:", error);
@@ -29,14 +31,14 @@ function ProblemSet() {
     const fetchSolvedProblems = async () => {
       try {
         const { data } = await axiosClient.get("/problems/individualsolved");
-        console.log("fetched solved problems", data);
+        // console.log("fetched solved problems", data);
         setSolvedProblems(data.problems);
       } catch (error) {
         console.error("Error fetching solved problems:", error);
       }
     };
-
     fetchProblems();
+    
     if (user) {
       fetchSolvedProblems();
     }
@@ -76,10 +78,6 @@ function ProblemSet() {
       default:
         return "text-slate-400 border-slate-400";
     }
-  };
-
-  const getStatusColor = (solved) => {
-    return solved ? "text-green-400" : "text-slate-400";
   };
 
   return (
@@ -124,8 +122,8 @@ function ProblemSet() {
                 tabIndex={0}
                 className="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white transition-colors duration-200"
               >
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                  {user?.firstName?.charAt(0)}
+                <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                  {(user?.firstName?.[0] ?? "") + (user?.lastName?.[0] ?? "")}
                 </div>
                 <span className="font-medium">{user?.firstName}</span>
                 <svg
@@ -365,7 +363,7 @@ function ProblemSet() {
                         ))}
                       </div>
                       <NavLink
-                        to={`/problem/${problem._id}`}
+                        to={`/problem/${problem._id}`} target="_blank"
                         className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition-all duration-200 font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30"
                       >
                         Solve Challenge

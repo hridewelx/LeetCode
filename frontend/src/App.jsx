@@ -1,5 +1,5 @@
 import "./App.css";
-import {Routes, Route, Navigate } from "react-router";
+import { Routes, Route, Navigate } from "react-router";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Homepage from "./pages/Homepage";
@@ -8,7 +8,8 @@ import { checkAuthenticatedUser } from "./authenticationSlicer"
 import { useEffect } from "react";
 import ProblemSet from "./pages/ProblemSet";
 import AdminPanel from "./pages/AdminPanel";
-// import DraggableResizableTextarea from "./pages/DraggableResizableTextarea";
+// import { Toaster } from "react-hot-toast";
+import SolveProblem from "./pages/SolveProblem";
 
 function App(){
 
@@ -21,6 +22,7 @@ function App(){
 
   return(
   <>
+    {/* <Toaster /> */}
     <Routes>
       <Route path="/" element={ isAuthenticated ? <Homepage></Homepage> : <Navigate to="/login"></Navigate> }></Route>
       {/* <Route path="/login" element={ isAuthenticated ? <Navigate to="/"></Navigate> : <Login></Login> }></Route> */}
@@ -29,9 +31,12 @@ function App(){
       <Route path="/signup" element={ <Signup></Signup> }></Route>
       <Route path="/problemset" element={ <ProblemSet></ProblemSet> }></Route>
       <Route path="/adminpanel" element={ <AdminPanel></AdminPanel> }></Route>
-      {/* <Route path="/test" element={ <DraggableResizableTextarea></DraggableResizableTextarea> }></Route> */}
+      <Route path="/problem/:problemId" element={ <SolveProblem></SolveProblem> }></Route>
 
-      {console.log(" isAuthenticated", isAuthenticated)}
+
+      {/* <Route path="/Test" element={ <Test/> }></Route> */}
+
+      {/* {console.log(" isAuthenticated", isAuthenticated)} */}
     </Routes>
   </>
   )

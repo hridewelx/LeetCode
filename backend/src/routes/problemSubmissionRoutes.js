@@ -5,7 +5,7 @@ import submitCodeRateLimiter from "../middlewares/submitCodeRatelimiter.js";
 
 const problemSubmissionRoutes = express.Router();
 
-problemSubmissionRoutes.post("/run", userMiddleware, runProblem);
-problemSubmissionRoutes.post("/:problemId", userMiddleware, submitCodeRateLimiter, submitProblem);
+problemSubmissionRoutes.post("/run/:problemId", userMiddleware, runProblem);
+problemSubmissionRoutes.post("/submit/:problemId", userMiddleware, submitCodeRateLimiter, submitProblem);
 
 export default problemSubmissionRoutes;

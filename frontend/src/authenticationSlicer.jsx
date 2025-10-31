@@ -61,7 +61,7 @@ export const checkAuthenticatedUser = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axiosClient.get("/user/checkauthentication");
-      console.log("authentication response", response);
+      // console.log("authentication response", response);
       return response.data.user;
     } catch (error) {
       // return rejectWithValue({

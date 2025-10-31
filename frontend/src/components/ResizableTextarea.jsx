@@ -1,4 +1,3 @@
-// ResizableTextarea.jsx
 const ResizableTextarea = ({ register, name, rows = 15, placeholder, className = "", ...props }) => {
   const handleMouseDown = (e) => {
     e.preventDefault();
