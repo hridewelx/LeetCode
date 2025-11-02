@@ -3,7 +3,7 @@ import { NavLink } from "react-router";
 import { userLogout } from "../../authenticationSlicer";
 import { useState } from "react";
 import { toast, Toaster } from "react-hot-toast";
-import AuthButton from "../Authentication/AuthButton";
+import AuthButton from "../UI/AuthButton";
 import UserAvatar from "../UI/UserAvatar";
 
 const Header = ({
@@ -163,7 +163,7 @@ const Header = ({
         <div className="h-5 w-[1px] bg-slate-700"></div>
 
         {/* Show UserAvatar if logged in, Login button if logged out */}
-        {user ? <UserAvatar /> : <SignButton />}
+        {user ? <UserAvatar /> : <AuthButton  />}
       </div>
     </div>
   );
@@ -495,16 +495,6 @@ const ClockComponent = ({
         </div>
       )}
     </div>
-  );
-};
-
-
-
-const SignButton = () => {
-  return (
-    <>
-      <AuthButton  />
-    </>
   );
 };
 

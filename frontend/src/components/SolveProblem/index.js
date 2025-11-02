@@ -1,5 +1,6 @@
 export { default as Header } from './Header';
 export { default as ProblemDescription } from './ProblemDescription';
+export { default as ProblemSubmissions } from './ProblemSubmissions';
 export { default as CodeEditor } from './CodeEditor';
 export { default as TestCasesPanel } from './TestCasesPanel';
 export { default as ResizableSplit } from './ResizableSplit';

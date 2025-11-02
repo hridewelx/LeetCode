@@ -3,6 +3,8 @@ import { useDispatch, useSelector } from "react-redux";
 import axiosClient from "../utilities/axiosClient";
 import { userLogout } from "../authenticationSlicer";
 import { NavLink } from "react-router";
+import UserAvatar from "../components/UI/UserAvatar";
+import AuthButton from "../components/UI/AuthButton";
 
 function ProblemSet() {
   const dispatch = useDispatch();
@@ -117,55 +119,7 @@ function ProblemSet() {
             >
               Dashboard
             </NavLink>
-            <div className="dropdown dropdown-end">
-              <div
-                tabIndex={0}
-                className="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white transition-colors duration-200"
-              >
-                <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                  {(user?.firstName?.[0] ?? "") + (user?.lastName?.[0] ?? "")}
-                </div>
-                <span className="font-medium">{user?.firstName}</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
-              <ul className="mt-2 p-2 shadow-2xl menu dropdown-content bg-slate-800/90 backdrop-blur-sm rounded-box w-52 border border-slate-700/50">
-                <li>
-                  <button
-                    onClick={handleLogout}
-                    className="text-slate-300 hover:text-white hover:bg-slate-700/50 transition-colors duration-200"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                      />
-                    </svg>
-                    Logout
-                  </button>
-                </li>
-              </ul>
-            </div>
+            {isAuthenticated ? <UserAvatar /> : <AuthButton />}
           </div>
         </div>
       </nav>

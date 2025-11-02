@@ -1,8 +1,8 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Link, useNavigate } from "react-router-dom";
-import { toast } from "react-hot-toast";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { toast, Toaster } from "react-hot-toast";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { userLogin } from "../authenticationSlicer";
@@ -26,19 +26,21 @@ const LoginPage = () => {
     resolver: zodResolver(loginSchema),
   });
 
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/";
+
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/");
+      navigate(redirectTo);
     }
-  }, [isAuthenticated, dispatch]);
+  }, [isAuthenticated, navigate, redirectTo]);
 
-  const onSubmit = async (data) => {
+  const onSubmit = (data) => {
     setIsLoading(true);
     try {
-      const result = await dispatch(userLogin(data));
+      const result = dispatch(userLogin(data));
       if (result) {
         toast.success("Login successful!");
-        // console.log(result);
       }
     } catch (error) {
       toast.error(
@@ -63,6 +65,17 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 2500,
+          style: {
+            background: "#1e293b",
+            color: "#f1f5f9",
+            border: "1px solid #475569",
+          },
+        }}
+      />
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <div className="flex items-center">

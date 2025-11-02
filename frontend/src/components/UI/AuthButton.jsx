@@ -1,10 +1,17 @@
-import { NavLink } from "react-router";
+import { NavLink, useLocation } from "react-router-dom";
 
 const AuthButton = () => {
+  const location = useLocation();
+  
+  // Store current location before redirecting to auth pages
+  const getAuthLink = (path) => {
+    return `${path}?redirect=${encodeURIComponent(location.pathname + location.search)}`;
+  };
+
   return (
     <div className="flex items-center gap-2">
       <NavLink
-        to="/login" target="_blank"
+        to={getAuthLink("/login")}
         className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-md transition-all duration-200 font-medium text-sm border border-purple-500/30 shadow-lg hover:shadow-purple-500/20 flex items-center gap-1.5 group"
       >
         <svg
@@ -25,7 +32,7 @@ const AuthButton = () => {
       </NavLink>
 
       <NavLink
-        to="/signup" target="_blank"
+        to={getAuthLink("/signup")}
         className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-md transition-all duration-200 font-medium text-sm border border-blue-500/30 shadow-lg hover:shadow-blue-500/20 flex items-center gap-1.5 group"
       >
         <svg

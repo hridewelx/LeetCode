@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import { useParams } from "react-router";
 import { useSelector } from "react-redux";
 import axiosClient from "../utilities/axiosClient";
@@ -8,6 +8,7 @@ import { toast, Toaster } from "react-hot-toast";
 import {
   Header,
   ProblemDescription,
+  ProblemSubmissions,
   CodeEditor,
   TestCasesPanel,
   ResizableSplit,
@@ -20,8 +21,7 @@ import {
 
 const SolveProblem = () => {
   const { problemId } = useParams();
-  const { user } = useSelector((state) => state.authentication);
-  // console.log("user", user);
+  const { user, isAuthenticated } = useSelector((state) => state.authentication);
 
   // State management
   const [code, setCode] = useState("");
@@ -33,6 +33,7 @@ const SolveProblem = () => {
   const [testResults, setTestResults] = useState(null);
   const [language, setLanguage] = useState("python");
   const [activeTestCaseIndex, setActiveTestCaseIndex] = useState(0);
+  const [submissionInfo, setSubmissionInfo] = useState([]);
 
   // Feature states
   const [showStickyNotes, setShowStickyNotes] = useState(false);
@@ -66,6 +67,12 @@ const SolveProblem = () => {
       updateCodeFromBoilerplate();
     }
   }, [language, problem]);
+
+  useEffect(() => {
+    if (problem && isAuthenticated) {
+      fetchSubmissions();
+    }
+  }, [user, problem]);
 
   // Clock logic
   useEffect(() => {
@@ -105,7 +112,7 @@ const SolveProblem = () => {
       if (!container) return;
 
       const rect = container.getBoundingClientRect();
-      console.log("handleMouseMoveX rect", rect);
+      // console.log("handleMouseMoveX rect", rect);
       const newSplitX = ((e.clientX - rect.left) / rect.width) * 100;
       setSplitX(Math.min(Math.max(newSplitX, 25), 75));
     };
@@ -165,6 +172,18 @@ const SolveProblem = () => {
       toast.error("Failed to load problem");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchSubmissions = async () => {
+    try {
+      const { data } = await axiosClient.get(
+        `/problems/individualsubmissions/${problemId}`
+      );
+      setSubmissionInfo(data.submissions);
+      // console.log("submissions data", data);
+    } catch (error) {
+      console.error("Error fetching submissions:", error);
     }
   };
 
@@ -334,6 +353,7 @@ const SolveProblem = () => {
         showStickyNotes={showStickyNotes}
         setShowStickyNotes={setShowStickyNotes}
         problem={problem}
+        submissionInfo={submissionInfo}
         getDifficultyColor={getDifficultyColor}
         submissionResults={submissionResults}
         showResultsTab={showResultsTab}
@@ -363,6 +383,7 @@ const MainContent = ({
   showStickyNotes,
   setShowStickyNotes,
   problem,
+  submissionInfo,
   getDifficultyColor,
   submissionResults,
   showResultsTab,
@@ -387,6 +408,7 @@ const MainContent = ({
       showStickyNotes={showStickyNotes}
       setShowStickyNotes={setShowStickyNotes}
       problem={problem}
+      submissionInfo={submissionInfo}
       getDifficultyColor={getDifficultyColor}
       submissionResults={submissionResults}
       showResultsTab={showResultsTab}
@@ -425,6 +447,7 @@ const LeftPanel = ({
   showStickyNotes,
   setShowStickyNotes,
   problem,
+  submissionInfo,
   getDifficultyColor,
   submissionResults,
   showResultsTab,
@@ -504,6 +527,12 @@ const LeftPanel = ({
         />
       )}
 
+      {activeTab === "submissions" && (
+        <ProblemSubmissions
+          submissions={submissionInfo}
+        />
+      )}
+
       {activeTab === "results" && submissionResults && (
         <ResultsTab
           submissionResults={submissionResults}
@@ -525,8 +554,7 @@ const LeftPanel = ({
       )}
 
       {(activeTab === "editorial" ||
-        activeTab === "solutions" ||
-        activeTab === "submissions") &&
+        activeTab === "solutions") &&
         !showStickyNotes &&
         activeTab !== "notes" && <ComingSoonTab tabName={activeTab} />}
     </div>
