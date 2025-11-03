@@ -14,6 +14,7 @@ import SolveProblem from "./pages/SolveProblem";
 import AdminLayout from "./components/Admin/AdminLayout";
 import Dashboard from "./components/Admin/Dashboard";
 import Questions from "./components/Admin/Questions";
+import { ChatAi } from "./components/SolveProblem";
 
 // Add these routes
 
@@ -43,6 +44,7 @@ function App(){
         <Route path="questions" element={<Questions />} />
       </Route>
       <Route path="/admin/questions" element={<Questions />} /> 
+      {/* <Route path="/algoforgeai/chat" element={<ChatAi />} /> */}
 
 
       {/* <Route path="/Test" element={ <Test/> }></Route> */}

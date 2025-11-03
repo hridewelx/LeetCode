@@ -17,11 +17,14 @@ import {
   ComingSoonTab,
   ProblemNotFound,
   LoadingSpinner,
+  ChatAi,
 } from "../components/SolveProblem";
 
 const SolveProblem = () => {
   const { problemId } = useParams();
-  const { user, isAuthenticated } = useSelector((state) => state.authentication);
+  const { user, isAuthenticated } = useSelector(
+    (state) => state.authentication
+  );
 
   // State management
   const [code, setCode] = useState("");
@@ -465,20 +468,26 @@ const LeftPanel = ({
           "editorial",
           "solutions",
           "submissions",
+          { key: "chatai", display: "Forge Ai" },
           ...(showResultsTab ? ["results"] : []),
-        ].map((tab) => (
-          <button
-            key={tab}
-            className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors duration-200 capitalize ${
-              activeTab === tab
-                ? "border-yellow-500 text-yellow-400"
-                : "border-transparent text-slate-400 hover:text-slate-300"
-            }`}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab}
-          </button>
-        ))}
+        ].map((tab) => {
+          const tabKey = typeof tab === "object" ? tab.key : tab;
+          const displayName = typeof tab === "object" ? tab.display : tab;
+
+          return (
+            <button
+              key={tabKey}
+              className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors duration-200 capitalize ${
+                activeTab === tabKey
+                  ? "border-yellow-500 text-yellow-400"
+                  : "border-transparent text-slate-400 hover:text-slate-300"
+              }`}
+              onClick={() => setActiveTab(tabKey)}
+            >
+              {displayName}
+            </button>
+          );
+        })}
 
         {/* Notes Tab - Only shown when active */}
         {showStickyNotes && (
@@ -528,8 +537,12 @@ const LeftPanel = ({
       )}
 
       {activeTab === "submissions" && (
-        <ProblemSubmissions
-          submissions={submissionInfo}
+        <ProblemSubmissions submissions={submissionInfo} />
+      )}
+
+      {activeTab === "chatai" && (
+        <ChatAi
+          problem={problem}
         />
       )}
 
@@ -553,8 +566,7 @@ const LeftPanel = ({
         />
       )}
 
-      {(activeTab === "editorial" ||
-        activeTab === "solutions") &&
+      {(activeTab === "editorial" || activeTab === "solutions") &&
         !showStickyNotes &&
         activeTab !== "notes" && <ComingSoonTab tabName={activeTab} />}
     </div>
