@@ -1,97 +1,217 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import axiosClient from "../utilities/axiosClient";
-import { userLogout } from "../authenticationSlicer";
 import { NavLink } from "react-router";
 import UserAvatar from "../components/UI/UserAvatar";
 import AuthButton from "../components/UI/AuthButton";
+import { SlidersHorizontal } from "lucide-react";
 
-function ProblemSet() {
-  const dispatch = useDispatch();
-  const { user, isAuthenticated } = useSelector((state) => state.authentication);
-  const [problems, setProblems] = useState([]);
-  const [solvedProblems, setSolvedProblems] = useState([]);
-  const [filters, setFilters] = useState({
-    difficulty: "all",
-    tag: "all",
-    status: "all",
-  });
+// --- Icons (Inline SVGs for zero-dependency) ---
+const SearchIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+    />
+  </svg>
+);
+const FilterIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+    />
+  </svg>
+);
+const CheckCircleIcon = () => (
+  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+    <path
+      fillRule="evenodd"
+      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+      clipRule="evenodd"
+    />
+  </svg>
+);
+const ArrowRightIcon = () => (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M14 5l7 7m0 0l-7 7m7-7H3"
+    />
+  </svg>
+);
 
-  console.log("User", user);
+// List of all unique tags (sorted for clean UI)
+const ALL_TAGS = [
+  "Array",
+  "String",
+  "Hash Table",
+  "Math",
+  "Dynamic Programming",
+  "Sorting",
+  "Greedy",
+  "Depth-First Search",
+  "Binary Search",
+  "Database",
+  "Matrix",
+  "Bit Manipulation",
+  "Tree",
+  "Breadth-First Search",
+  "Two Pointers",
+  "Prefix Sum",
+  "Heap (Priority Queue)",
+  "Simulation",
+  "Counting",
+  "Graph",
+  "Binary Tree",
+  "Stack",
+  "Sliding Window",
+  "Design",
+  "Enumeration",
+  "Backtracking",
+  "Union Find",
+  "Number Theory",
+  "Linked List",
+  "Ordered Set",
+  "Monotonic Stack",
+  "Segment Tree",
+  "Trie",
+  "Combinatorics",
+  "Divide and Conquer",
+  "Bitmask",
+  "Queue",
+  "Recursion",
+  "Geometry",
+  "Binary Indexed Tree",
+  "Memoization",
+  "Hash Function",
+  "Binary Search Tree",
+  "Shortest Path",
+  "String Matching",
+  "Topological Sort",
+  "Rolling Hash",
+  "Game Theory",
+  "Interactive",
+  "Data Stream",
+  "Monotonic Queue",
+  "Brainteaser",
+  "Doubly-Linked List",
+  "Randomized",
+  "Merge Sort",
+  "Counting Sort",
+  "Iterator",
+  "Concurrency",
+  "Line Sweep",
+  "Probability and Statistics",
+  "Quickselect",
+  "Suffix Array",
+  "Minimum Spanning Tree",
+  "Bucket Sort",
+  "Shell",
+  "Reservoir Sampling",
+  "Strongly Connected Component",
+  "Eulerian Circuit",
+  "Radix Sort",
+  "Rejection Sampling",
+  "Biconnected Component",
+].sort((a, b) => a.localeCompare(b));
 
-  useEffect(() => {
-    const fetchProblems = async () => {
-      try {
-        const { data } = await axiosClient.get("/problems/problemset");
-        // console.log("fetched problems", data);
-        setProblems(data.problems);
-      } catch (error) {
-        console.error("Error fetching problems:", error);
-      }
-    };
+// --- Filter Bar Component ---
 
-    const fetchSolvedProblems = async () => {
-      try {
-        const { data } = await axiosClient.get("/problems/individualsolved");
-        // console.log("fetched solved problems", data);
-        setSolvedProblems(data.problems);
-      } catch (error) {
-        console.error("Error fetching solved problems:", error);
-      }
-    };
-    fetchProblems();
-    
-    if (user) {
-      fetchSolvedProblems();
-    }
-  }, [dispatch, user]);
-
-  const filteredProblems = problems.filter((problem) => {
-    const difficultyMatch =
-      filters.difficulty === "all" ||
-      problem.difficulty.toLowerCase() === filters.difficulty.toLowerCase();
-    const tagMatch =
-      filters.tag === "all" ||
-      (Array.isArray(problem.tags)
-        ? problem.tags.some(
-            (tag) => tag.toLowerCase() === filters.tag.toLowerCase()
-          )
-        : problem.tags.toLowerCase() === filters.tag.toLowerCase());
-
-    const statusMatch =
-      filters.status === "all" ||
-      solvedProblems.some((sp) => sp._id === problem._id);
-    return difficultyMatch && tagMatch && statusMatch;
-  });
-
-  const handleLogout = () => {
-    dispatch(userLogout());
-    setSolvedProblems([]);
+const ProblemFilterBar = ({
+  filters,
+  setFilters,
+  searchQuery,
+  setSearchQuery,
+  onClear,
+}) => {
+  // Handler for difficulty/status selects
+  const handleSelectChange = (key, value) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  const getDifficultyColor = (difficulty) => {
-    switch (difficulty.toLowerCase()) {
-      case "easy":
-        return "text-green-400 border-green-400";
-      case "medium":
-        return "text-yellow-400 border-yellow-400";
-      case "hard":
-        return "text-red-400 border-red-400";
-      default:
-        return "text-slate-400 border-slate-400";
-    }
-  };
+  const isFilterActive =
+    filters.difficulty !== "all" ||
+    filters.tag.length > 0 ||
+    filters.status !== "all" ||
+    searchQuery.length > 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Navigation Bar */}
-      <nav className="bg-slate-800/70 backdrop-blur-sm border-b border-slate-700/50 shadow-lg shadow-black/30 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center mr-3">
+    <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 mb-4 backdrop-blur-md shadow-lg sticky top-20 z-30 transition-all duration-300">
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+        {/* Search Input */}
+        <div className="relative flex-1 min-w-[200px] w-full md:w-auto">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+            <SearchIcon />
+          </div>
+          <input
+            type="text"
+            placeholder="Search problems by title..."
+            className="w-full bg-slate-950 border border-slate-800 text-white text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5 placeholder-slate-500 transition-all"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+
+        {/* Filters Group */}
+        <div className="flex flex-wrap gap-2 md:gap-4 items-center">
+          <div className="flex items-center text-slate-500 text-sm font-medium mr-1">
+            <FilterIcon />
+            <span className="ml-2 hidden sm:block">Filters:</span>
+          </div>
+
+          {/* Difficulty Select */}
+          <select
+            className="bg-slate-950 border border-slate-800 text-slate-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 hover:bg-slate-800 transition-colors cursor-pointer appearance-none pr-8"
+            value={filters.difficulty}
+            onChange={(e) => handleSelectChange("difficulty", e.target.value)}
+          >
+            <option value="all">Difficulty</option>
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+
+          {/* Status Select */}
+          <select
+            className="bg-slate-950 border border-slate-800 text-slate-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 hover:bg-slate-800 transition-colors cursor-pointer appearance-none pr-8"
+            value={filters.status}
+            onChange={(e) => handleSelectChange("status", e.target.value)}
+          >
+            <option value="all">Status</option>
+            <option value="solved">Solved</option>
+          </select>
+
+          {/* Clear Button (Visible only if filters are active) */}
+          {isFilterActive && (
+            <button
+              onClick={onClear}
+              className="text-sm text-slate-500 hover:text-red-400 p-2.5 transition-colors duration-200 flex items-center"
+              title="Clear all filters"
+            >
               <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-white"
+                className="w-4 h-4 mr-1"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -100,159 +220,295 @@ function ProblemSet() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                  d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
-            </div>
-            <NavLink
-              to="/"
-              className="text-2xl font-bold text-white hover:text-blue-400 transition-colors duration-200"
-            >
-              AlgoForge
-            </NavLink>
-          </div>
+              <span className="hidden md:inline">Clear</span>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
-          <div className="flex items-center gap-6">
-            <NavLink
-              to="/"
-              className="text-slate-300 hover:text-white transition-colors duration-200 font-medium"
+// --- Tag Selector Component ---
+
+const TagSelector = ({ currentTags, onTagToggle }) => {
+  return (
+    <div className="mb-8 p-4 bg-slate-900/60 border border-slate-800 rounded-xl shadow-lg">
+      <h3 className="text-md font-semibold text-white mb-3 flex items-center">
+        <SlidersHorizontal className="mr-2 w-4 h-4" /> Filter by Topic
+        {currentTags.length > 0 && (
+          <span className="ml-4 text-sm text-blue-400 font-normal px-2 py-0.5 bg-blue-500/10 rounded-full">
+            {currentTags.length} Selected Tags
+          </span>
+        )}
+      </h3>
+      <div className="flex flex-wrap gap-2 pr-2">
+        {ALL_TAGS.map((tag) => {
+          const lowerTag = tag.toLowerCase();
+          const isSelected = currentTags.includes(lowerTag);
+          return (
+            <button
+              key={tag}
+              onClick={() => onTagToggle(tag)}
+              className={`
+                text-sm font-medium px-3 py-1 rounded-full transition-all duration-200
+                ${
+                  isSelected
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-500/20 border-blue-600"
+                    : "bg-slate-800/70 text-slate-400 hover:bg-slate-700 border border-slate-700"
+                }
+            `}
             >
-              Dashboard
-            </NavLink>
-            {isAuthenticated ? <UserAvatar /> : <AuthButton />}
+              {tag}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// --- Main Component ---
+
+function ProblemSet() {
+  const dispatch = useDispatch();
+  const { isAuthenticated } = useSelector((state) => state.authentication);
+  const [problems, setProblems] = useState([]);
+  const [solvedProblems, setSolvedProblems] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState({
+    difficulty: "all",
+    tag: [], // Array for multi-select
+    status: "all",
+  });
+
+  // Data Fetching
+  useEffect(() => {
+    const fetchProblems = async () => {
+      try {
+        const { data } = await axiosClient.get("/problems/problemset");
+        setProblems(data.problems);
+      } catch (error) {
+        console.error("Error fetching problems:", error);
+      }
+    };
+
+    const fetchSolvedProblems = async () => {
+      try {
+        await axiosClient.get("/problems/individualsolved").then(({ data }) => {
+          setSolvedProblems(data.problems);
+        });
+      } catch (error) {
+        // Ignore error if not authenticated
+      }
+    };
+    fetchProblems();
+
+    if (isAuthenticated) {
+      fetchSolvedProblems();
+    }
+  }, [isAuthenticated]);
+
+  // Handler for clicking a tag pill
+  const handleTagToggle = (tag) => {
+    const lowerTag = tag.toLowerCase();
+    setFilters((prevFilters) => {
+      let newTags;
+      if (prevFilters.tag.includes(lowerTag)) {
+        // Deselect
+        newTags = prevFilters.tag.filter((t) => t !== lowerTag);
+      } else {
+        // Select
+        newTags = [...prevFilters.tag, lowerTag];
+      }
+      return { ...prevFilters, tag: newTags };
+    });
+  };
+
+  // Combined Filter Logic
+  const filteredProblems = useMemo(() => {
+    // Helper to map problem tags to lowercase for comparison
+    const problemsWithLowerTags = problems.map((problem) => ({
+      ...problem,
+      tagsLower: Array.isArray(problem.tags)
+        ? problem.tags.map((t) => t.toLowerCase())
+        : [],
+    }));
+
+    return problemsWithLowerTags.filter((problem) => {
+      // 1. Search Query Match
+      const searchMatch = problem.title
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+
+      // 2. Difficulty Match
+      const difficultyMatch =
+        filters.difficulty === "all" ||
+        problem.difficulty.toLowerCase() === filters.difficulty.toLowerCase();
+
+      // 3. Status Match
+      const isSolved = solvedProblems.some((sp) => sp._id === problem._id);
+      const statusMatch =
+        filters.status === "all" || (filters.status === "solved" && isSolved);
+
+      // 4. Tag Match (NEW LOGIC: Problem must have ALL of the selected tags)
+      const tagMatch =
+        filters.tag.length === 0 || // If tag array is empty, it matches all
+        (problem.tagsLower.length > 0 &&
+          filters.tag.every((filterTag) =>
+            problem.tagsLower.includes(filterTag)
+          ));
+
+      return searchMatch && difficultyMatch && statusMatch && tagMatch;
+    });
+  }, [problems, solvedProblems, searchQuery, filters]);
+
+  const getDifficultyColor = (difficulty) => {
+    switch (difficulty.toLowerCase()) {
+      case "easy":
+        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+      case "medium":
+        return "bg-yellow-500/10 text-yellow-400 border-yellow-500/20";
+      case "hard":
+        return "bg-rose-500/10 text-rose-400 border-rose-500/20";
+      default:
+        return "bg-slate-500/10 text-slate-400 border-slate-500/20";
+    }
+  };
+
+  const completionPercentage =
+    problems.length > 0
+      ? Math.round((solvedProblems.length / problems.length) * 100)
+      : 0;
+
+  const handleClearFilters = () => {
+    setFilters({ difficulty: "all", tag: [], status: "all" }); // Clear tag array
+    setSearchQuery("");
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-300 font-sans selection:bg-blue-500/30 selection:text-blue-200 relative overflow-hidden">
+      {/* Background Tech Pattern */}
+      <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+        <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-blue-500 opacity-20 blur-[100px]"></div>
+      </div>
+
+      {/* Navigation Bar (Sticky) */}
+      <nav className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-slate-800">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                  />
+                </svg>
+              </div>
+              <NavLink
+                to="/"
+                className="text-xl font-bold text-white tracking-tight"
+              >
+                AlgoForge
+              </NavLink>
+            </div>
+
+            <div className="flex items-center gap-6">
+              <NavLink
+                to="/"
+                className="text-sm font-medium text-slate-400 hover:text-white transition-colors"
+              >
+                Dashboard
+              </NavLink>
+              {isAuthenticated ? <UserAvatar /> : <AuthButton />}
+            </div>
           </div>
         </div>
       </nav>
 
       {/* Main Content */}
-      <div className="container mx-auto p-6 max-w-7xl">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Problem Set</h1>
-          <p className="text-slate-400 font-semibold">
-            Sharpen your skills with our curated collection of coding challenges
-          </p>
-        </div>
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">
+        {/* Hero / Stats Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+          <div className="lg:col-span-2">
+            <h1 className="text-4xl font-bold text-white mb-3">
+              Problem{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
+                Explorer
+              </span>
+            </h1>
+            <p className="text-slate-400 text-lg max-w-2xl leading-relaxed">
+              Master algorithms with our curated collection. Track your progress
+              and challenge yourself with real-world interview problems.
+            </p>
+          </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-4 mb-8 p-6 bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 shadow-xl shadow-black/30">
-          <div className="flex flex-wrap gap-4 w-full">
-            <select
-              className="select bg-slate-700/50 border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-              value={filters.status}
-              onChange={(e) =>
-                setFilters({ ...filters, status: e.target.value })
-              }
-            >
-              <option value="all">All Problems</option>
-              <option value="solved">Solved Problems</option>
-            </select>
-
-            <select
-              className="select bg-slate-700/50 border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-              value={filters.difficulty}
-              onChange={(e) =>
-                setFilters({ ...filters, difficulty: e.target.value })
-              }
-            >
-              <option value="all">All Difficulties</option>
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
-            </select>
-
-            <select
-              className="select bg-slate-700/50 border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-              value={filters.tag}
-              onChange={(e) => setFilters({ ...filters, tag: e.target.value })}
-            >
-              <option value="array">Array</option>
-              <option value="string">String</option>
-              <option value="hash table">Hash Table</option>
-              <option value="math">Math</option>
-              <option value="dynamic programming">Dynamic Programming</option>
-              <option value="sorting">Sorting</option>
-              <option value="greedy">Greedy</option>
-              <option value="depth-first search">Depth-First Search</option>
-              <option value="binary search">Binary Search</option>
-              <option value="database">Database</option>
-              <option value="matrix">Matrix</option>
-              <option value="bit manipulation">Bit Manipulation</option>
-              <option value="tree">Tree</option>
-              <option value="breadth-first search">Breadth-First Search</option>
-              <option value="two pointers">Two Pointers</option>
-              <option value="prefix sum">Prefix Sum</option>
-              <option value="heap (priority queue)">Heap (Priority Queue)</option>
-              <option value="simulation">Simulation</option>
-              <option value="counting">Counting</option>
-              <option value="graph">Graph</option>
-              <option value="binary tree">Binary Tree</option>
-              <option value="stack">Stack</option>
-              <option value="sliding window">Sliding Window</option>
-              <option value="design">Design</option>
-              <option value="enumeration">Enumeration</option>
-              <option value="backtracking">Backtracking</option>
-              <option value="union find">Union Find</option>
-              <option value="number theory">Number Theory</option>
-              <option value="linked list">Linked List</option>
-              <option value="ordered set">Ordered Set</option>
-              <option value="monotonic stack">Monotonic Stack</option>
-              <option value="segment tree">Segment Tree</option>
-              <option value="trie">Trie</option>
-              <option value="combinatorics">Combinatorics</option>
-              <option value="divide and conquer">Divide and Conquer</option>
-              <option value="bitmask">Bitmask</option>
-              <option value="queue">Queue</option>
-              <option value="recursion">Recursion</option>
-              <option value="geometry">Geometry</option>
-              <option value="binary indexed tree">Binary Indexed Tree</option>
-              <option value="memoization">Memoization</option>
-              <option value="hash function">Hash Function</option>
-              <option value="binary search tree">Binary Search Tree</option>
-              <option value="shortest path">Shortest Path</option>
-              <option value="string matching">String Matching</option>
-              <option value="topological sort">Topological Sort</option>
-              <option value="rolling hash">Rolling Hash</option>
-              <option value="game theory">Game Theory</option>
-              <option value="interactive">Interactive</option>
-              <option value="data stream">Data Stream</option>
-              <option value="monotonic queue">Monotonic Queue</option>
-              <option value="brainteaser">Brainteaser</option>
-              <option value="doubly-linked list">Doubly-Linked List</option>
-              <option value="randomized">Randomized</option>
-              <option value="merge sort">Merge Sort</option>
-              <option value="counting sort">Counting Sort</option>
-              <option value="iterator">Iterator</option>
-              <option value="concurrency">Concurrency</option>
-              <option value="line sweep">Line Sweep</option>
-              <option value="probability and statistics">Probability and Statistics</option>
-              <option value="quickselect">Quickselect</option>
-              <option value="suffix array">Suffix Array</option>
-              <option value="minimum spanning tree">Minimum Spanning Tree</option>
-              <option value="bucket sort">Bucket Sort</option>
-              <option value="shell">Shell</option>
-              <option value="reservoir sampling">Reservoir Sampling</option>
-              <option value="strongly connected component">Strongly Connected Component</option>
-              <option value="eulerian circuit">Eulerian Circuit</option>
-              <option value="radix sort">Radix Sort</option>
-              <option value="rejection sampling">Rejection Sampling</option>
-              <option value="biconnected component">Biconnected Component</option>
-            </select>
+          {/* Progress Card */}
+          <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 backdrop-blur-sm shadow-xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all duration-500"></div>
+            <div className="flex justify-between items-end mb-2 relative z-10">
+              <div>
+                <p className="text-sm text-slate-400 font-medium uppercase tracking-wider">
+                  Your Progress
+                </p>
+                <p className="text-2xl font-bold text-white mt-1">
+                  {solvedProblems.length}{" "}
+                  <span className="text-slate-500 text-lg font-normal">
+                    / {problems.length}
+                  </span>
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-bold text-blue-400">
+                  {completionPercentage}%
+                </p>
+              </div>
+            </div>
+            {/* Progress Bar */}
+            <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2.5 rounded-full transition-all duration-1000 ease-out"
+                style={{ width: `${completionPercentage}%` }}
+              ></div>
+            </div>
           </div>
         </div>
 
+        {/* --- Filters Bar --- */}
+        <ProblemFilterBar
+          filters={filters}
+          setFilters={setFilters}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          onClear={handleClearFilters}
+        />
+
+        {/* --- Tag Selector --- */}
+        <TagSelector currentTags={filters.tag} onTagToggle={handleTagToggle} />
+
         {/* Problems List */}
-        <div className="grid gap-4">
+        <div className="space-y-4">
           {filteredProblems.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-slate-400 text-lg">
-                No problems found matching your filters.
+            <div className="text-center py-20 bg-slate-900/30 rounded-2xl border border-slate-800 border-dashed">
+              <div className="text-slate-500 text-lg font-medium">
+                No problems found matching your criteria.
               </div>
               <button
-                onClick={() =>
-                  setFilters({ difficulty: "all", tag: "all", status: "all" })
-                }
-                className="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+                onClick={handleClearFilters}
+                className="mt-4 px-6 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg transition-colors"
               >
                 Clear Filters
               </button>
@@ -265,96 +521,65 @@ function ProblemSet() {
               return (
                 <div
                   key={problem._id}
-                  className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 shadow-xl shadow-black/30 hover:shadow-2xl hover:shadow-black/40 transition-all duration-300 hover:border-slate-600/50"
+                  className="group relative bg-slate-900/60 hover:bg-slate-800/80 backdrop-blur-sm rounded-xl border border-slate-800 hover:border-blue-500/30 p-5 transition-all duration-300 hover:shadow-lg hover:shadow-blue-900/10 flex flex-col md:flex-row md:items-center justify-between gap-4"
                 >
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-4">
-                        <h2 className="text-xl font-bold text-white hover:text-blue-400 transition-colors duration-200">
-                          <NavLink
-                            to={`/problem/${problem._id}`}
-                            className="hover:text-blue-400"
-                          >
-                            {problem.title}
-                          </NavLink>
-                        </h2>
-                        {isSolved && (
-                          <div className="flex items-center gap-1 px-3 py-1 bg-green-500/20 border border-green-400/30 rounded-full text-green-400 text-sm font-medium">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-4 w-4"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            Solved
-                          </div>
-                        )}
-                      </div>
-                      <div
-                        className={`px-3 py-1 border rounded-full text-sm font-medium ${getDifficultyColor(
+                  {/* Left: Content */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h2 className="text-lg font-bold text-slate-100 group-hover:text-blue-400 transition-colors">
+                        <NavLink
+                          to={`/problem/${problem._id}`}
+                          className="focus:outline-none"
+                        >
+                          {problem.title}
+                        </NavLink>
+                      </h2>
+                      {isSolved && (
+                        <span
+                          title="Solved"
+                          className="text-emerald-500 animate-in fade-in zoom-in duration-300"
+                        >
+                          <CheckCircleIcon />
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span
+                        className={`px-2.5 py-0.5 rounded text-xs font-semibold border ${getDifficultyColor(
                           problem.difficulty
                         )}`}
                       >
                         {problem.difficulty}
-                      </div>
-                    </div>
+                      </span>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {problem.tags.map((tag, index) => (
-                          <span
-                            key={index}
-                            className="px-3 py-1 bg-blue-500/20 border border-blue-400/30 rounded-full text-blue-400 text-sm font-medium"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                      <NavLink
-                        to={`/problem/${problem._id}`} target="_blank"
-                        className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition-all duration-200 font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30"
-                      >
-                        Solve Challenge
-                      </NavLink>
+                      {/* Tags - Showing all tags */}
+                      {problem.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="text-xs text-slate-500 bg-slate-950 border border-slate-800 px-2 py-0.5 rounded"
+                        >
+                          {tag}
+                        </span>
+                      ))}
                     </div>
+                  </div>
+
+                  {/* Right: Action */}
+                  <div className="flex items-center">
+                    <NavLink
+                      to={`/problem/${problem._id}`}
+                      target="_blank"
+                      className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white rounded-lg font-medium transition-all duration-300 border border-slate-700 hover:border-blue-500 group-hover:translate-x-1"
+                    >
+                      Solve
+                      <ArrowRightIcon />
+                    </NavLink>
                   </div>
                 </div>
               );
             })
           )}
-        </div>
-
-        {/* Stats Footer */}
-        <div className="mt-12 pt-8 border-t border-slate-700/50">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-            <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
-              <div className="text-2xl font-bold text-white">
-                {problems.length}
-              </div>
-              <div className="text-slate-400 text-sm">Total Problems</div>
-            </div>
-            <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
-              <div className="text-2xl font-bold text-white">
-                {solvedProblems.length}
-              </div>
-              <div className="text-slate-400 text-sm">Problems Solved</div>
-            </div>
-            <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
-              <div className="text-2xl font-bold text-white">
-                {problems.length > 0
-                  ? Math.round((solvedProblems.length / problems.length) * 100)
-                  : 0}
-                %
-              </div>
-              <div className="text-slate-400 text-sm">Completion Rate</div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

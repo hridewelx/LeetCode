@@ -102,6 +102,7 @@ const problemSchema = new Schema(
         "Biconnected Component",
       ],
     },
+    
     visibleTestCases: [
       {
         input: {
@@ -153,7 +154,6 @@ const problemSchema = new Schema(
         },
         code: {
           type: String,
-          required: true,
           trim: true,
         },
       },

@@ -2,27 +2,25 @@ import { useNavigate } from "react-router";
 import { z } from "zod";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axiosClient from "../utilities/axiosClient";
-import { useState } from "react";
-import ResizableTextarea from "../components/ResizableTextarea";
+import axiosClient from "../../utilities/axiosClient";
+import { useState, useEffect } from "react";
+import ResizableTextarea from "../ResizableTextarea";
+import { useSelector } from "react-redux";
 
 const problemSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().min(5, "Description must be at least 5 characters"),
   difficulty: z.enum(["Easy", "Medium", "Hard"]),
-
   tags: z.array(z.string()).min(1, "At least one tag required"),
-
   visibleTestCases: z
     .array(
       z.object({
         input: z.string().min(1, "Input is required"),
         output: z.string().min(1, "Output is required"),
-        explanation: z.string().min(1, "Explanation is required"),
+        explanation: z.string(),
       })
     )
     .min(1, "At least one visible test case required"),
-
   hiddenTestCases: z
     .array(
       z.object({
@@ -31,27 +29,26 @@ const problemSchema = z.object({
       })
     )
     .min(1, "At least one hidden test case required"),
-
   boilerplateCode: z
     .array(
       z.object({
-        language: z.enum(["C", "C++", "Java", "JavaScript", "Python"]),
-        code: z.string().min(1, "Code is required"),
+        language: z.enum(["c", "cpp", "java", "javascript", "python"]),
+        code: z.string()
       })
     )
     .min(5, "At least 5 boilerplate codes required"),
-
   referenceSolution: z.array(
     z.object({
-      language: z.enum(["C", "C++", "Java", "JavaScript", "Python"]),
+      language: z.enum(["c", "cpp", "java", "javascript", "python"]),
       code: z.string().min(1, "Code is required"),
     })
   ),
 });
 
-function AdminPanel() {
+function QuestionCreation() {
   const navigate = useNavigate();
-  const [selectedTags, setSelectedTags] = useState([]);
+  const [createStatus, setCreateStatus] = useState(null); // 'creating', 'success', 'error'
+  const { user } = useSelector((state) => state.authentication);
 
   const {
     register,
@@ -59,7 +56,10 @@ function AdminPanel() {
     control,
     setValue,
     watch,
-    formState: { errors, isSubmitting },
+    reset,
+    trigger,
+    getValues,
+    formState: { errors, isSubmitting, isDirty },
   } = useForm({
     resolver: zodResolver(problemSchema),
     defaultValues: {
@@ -78,18 +78,18 @@ function AdminPanel() {
         },
       ],
       boilerplateCode: [
-        { language: "C", code: "" },
-        { language: "C++", code: "" },
-        { language: "Java", code: "" },
-        { language: "JavaScript", code: "" },
-        { language: "Python", code: "" },
+        { language: "c", code: "" },
+        { language: "cpp", code: "" },
+        { language: "java", code: "" },
+        { language: "javascript", code: "" },
+        { language: "python", code: "" },
       ],
       referenceSolution: [
-        { language: "C", code: "" },
-        { language: "C++", code: "" },
-        { language: "Java", code: "" },
-        { language: "JavaScript", code: "" },
-        { language: "Python", code: "" },
+        { language: "c", code: "" },
+        { language: "cpp", code: "" },
+        { language: "java", code: "" },
+        { language: "javascript", code: "" },
+        { language: "python", code: "" },
       ],
     },
   });
@@ -160,7 +160,13 @@ function AdminPanel() {
     "String Matching",
   ];
 
-  // Watch the tags value to sync with selectedTags state
+  // Set problemCreator when user data is available
+  useEffect(() => {
+    if (user?._id) {
+      setValue("problemCreator", user._id);
+    }
+  }, [user, setValue]);
+
   const currentTags = watch("tags");
 
   const handleTagSelect = (tag) => {
@@ -171,46 +177,101 @@ function AdminPanel() {
     setValue("tags", newTags, { shouldValidate: true });
   };
 
+  
   const removeTag = (tagToRemove) => {
     const newTags = currentTags.filter((tag) => tag !== tagToRemove);
     setValue("tags", newTags, { shouldValidate: true });
   };
 
   const onSubmit = async (data) => {
+    setCreateStatus('creating');
     try {
-      await axiosClient.post("/problem/create", data);
-      alert("Problem created successfully!");
-      navigate("/");
+      // Ensure problemCreator is set
+      const submitData = {
+        ...data,
+        problemCreator: user?._id
+      };
+      
+      console.log( "Submit Data:", submitData)
+      await axiosClient.post("/problems/create", submitData);
+      setCreateStatus('success');
+      setTimeout(() => {
+        navigate("/admin/questions");
+      }, 1500);
     } catch (error) {
-      alert(`Error: ${error.response?.data?.message || error.message}`);
+      console.error("Create error:", error);
+      console.error("Error response:", error.response?.data); 
+      setCreateStatus('error');
+      setTimeout(() => setCreateStatus(null), 3000);
     }
   };
 
-  const programmingLanguages = ["C", "C++", "Java", "JavaScript", "Python"];
+  const handleFormSubmit = async (e) => {
+  e.preventDefault();
+  
+  console.log("User ID:", user?._id); // Check if user ID exists
+  console.log("Form values:", getValues()); // Check form data
+  
+  const isValid = await trigger();
+  console.log("Form valid:", isValid);
+  console.log("Form errors:", errors);
+  
+  if (isValid && user?._id) {
+    const formData = getValues();
+    await onSubmit(formData);
+  } else {
+    console.log("Cannot submit - validation or auth issues");
+    setCreateStatus('error');
+    setTimeout(() => setCreateStatus(null), 3000);
+  }
+};
+
+  const programmingLanguages = ["c", "cpp", "java", "javascript", "python"];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-8">
+      {/* Status Notification */}
+      {createStatus && (
+        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg border backdrop-blur-sm transition-all duration-300 ${
+          createStatus === 'creating' 
+            ? 'bg-blue-500/20 border-blue-400/30 text-blue-300'
+            : createStatus === 'success' 
+            ? 'bg-green-500/20 border-green-400/30 text-green-300'
+            : 'bg-red-500/20 border-red-400/30 text-red-300'
+        }`}>
+          <div className="flex items-center gap-3">
+            {createStatus === 'creating' && (
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div>
+            )}
+            {createStatus === 'success' && (
+              <div className="h-5 w-5 bg-green-500 rounded-full flex items-center justify-center">
+                <div className="h-2 w-2 bg-white rounded-full"></div>
+              </div>
+            )}
+            {createStatus === 'error' && (
+              <div className="h-5 w-5 bg-red-500 rounded-full flex items-center justify-center">
+                <div className="h-2 w-2 bg-white rounded-full"></div>
+              </div>
+            )}
+            <span className="font-medium">
+              {createStatus === 'creating' && 'Creating problem...'}
+              {createStatus === 'success' && 'Problem created successfully!'}
+              {createStatus === 'error' && 'Creation failed. Please try again.'}
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="container mx-auto px-4 max-w-6xl">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center mr-3">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-                />
-              </svg>
+            <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 flex items-center justify-center mr-3">
+              <span className="text-white font-bold text-lg">Q</span>
             </div>
-            <h1 className="text-3xl font-bold text-white">AlgoForge Admin</h1>
+            <h1 className="text-3xl font-bold text-white">
+              AlgoForge Question Creation Panel
+            </h1>
           </div>
           <p className="text-slate-400 font-semibold">
             Create new coding challenges for the community
@@ -218,7 +279,7 @@ function AdminPanel() {
         </div>
 
         <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700/50 shadow-2xl shadow-black/30 p-6">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={handleFormSubmit} className="space-y-8">
             {/* Basic Information */}
             <div className="space-y-6">
               <h2 className="text-xl font-bold text-white border-b border-slate-700/50 pb-2">
@@ -234,28 +295,14 @@ function AdminPanel() {
                   <input
                     type="text"
                     {...register("title")}
-                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
                     placeholder="Enter problem title"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") e.preventDefault();
                     }}
                   />
                   {errors.title && (
-                    <p className="mt-2 text-sm text-red-400 flex items-center">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 mr-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
+                    <p className="mt-2 text-sm text-red-400">
                       {errors.title.message}
                     </p>
                   )}
@@ -267,7 +314,7 @@ function AdminPanel() {
                   </label>
                   <select
                     {...register("difficulty")}
-                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 appearance-none cursor-pointer"
+                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200 appearance-none cursor-pointer"
                   >
                     <option value="Easy" className="bg-slate-700 text-white">
                       Easy
@@ -315,28 +362,15 @@ function AdminPanel() {
                   {currentTags?.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 border border-blue-400/30 rounded-full text-blue-400 text-sm"
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-amber-500/20 border border-amber-400/30 rounded-full text-amber-400 text-sm"
                     >
                       {tag}
                       <button
                         type="button"
                         onClick={() => removeTag(tag)}
-                        className="hover:text-blue-300 transition-colors duration-200"
+                        className="hover:text-amber-300 transition-colors duration-200"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-3 w-3"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
+                        ×
                       </button>
                     </span>
                   ))}
@@ -357,7 +391,7 @@ function AdminPanel() {
                         onClick={() => handleTagSelect(tag)}
                         className={`px-3 py-2 rounded text-sm font-medium transition-all duration-200 ${
                           currentTags?.includes(tag)
-                            ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
+                            ? "bg-amber-500 text-white shadow-lg shadow-amber-500/30"
                             : "bg-slate-600/50 text-slate-300 hover:bg-slate-500/50 hover:text-white"
                         }`}
                       >
@@ -368,21 +402,7 @@ function AdminPanel() {
                 </div>
 
                 {errors.tags && (
-                  <p className="mt-2 text-sm text-red-400 flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 mr-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
+                  <p className="mt-2 text-sm text-red-400">
                     {errors.tags.message}
                   </p>
                 )}
@@ -622,47 +642,53 @@ function AdminPanel() {
             <div className="flex gap-4 pt-6 border-t border-slate-700/50">
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className={`flex-1 py-4 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-bold text-lg transition-all duration-200 ${
-                  isSubmitting
+                disabled={isSubmitting || !isDirty || createStatus === 'creating' || !user?._id}
+                className={`flex-1 py-4 px-6 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-lg font-bold text-lg transition-all duration-200 relative overflow-hidden ${
+                  isSubmitting || !isDirty || createStatus === 'creating' || !user?._id
                     ? "opacity-50 cursor-not-allowed"
-                    : "shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30"
-                }`}
+                    : "shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30"
+                }`} 
               >
-                {isSubmitting ? (
+                {createStatus === 'creating' ? (
                   <div className="flex items-center justify-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
                     Creating Problem...
                   </div>
+                ) : isSubmitting ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                    Processing...
+                  </div>
+                ) : !user?._id ? (
+                  "Please login to create"
                 ) : (
                   "Create Problem"
+                )}
+                
+                {/* Progress bar for creating state */}
+                {createStatus === 'creating' && (
+                  <div className="absolute bottom-0 left-0 h-1 bg-amber-400 animate-pulse w-full"></div>
                 )}
               </button>
               <button
                 type="button"
-                onClick={() => navigate("/")}
-                className="px-8 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold transition-colors duration-200 border border-slate-600"
+                onClick={() => navigate("/admin/questions")}
+                disabled={createStatus === 'creating'}
+                className={`px-8 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold transition-colors duration-200 border border-slate-600 ${
+                  createStatus === 'creating' ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
                 Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => reset()}
+                disabled={!isDirty || createStatus === 'creating'}
+                className={`px-8 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold transition-colors duration-200 border border-slate-600 ${
+                  !isDirty || createStatus === 'creating' ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                Reset Form
               </button>
             </div>
           </form>
@@ -672,4 +698,4 @@ function AdminPanel() {
   );
 }
 
-export default AdminPanel;
+export default QuestionCreation;

@@ -10,3 +10,4 @@ export { default as ComingSoonTab } from './ComingSoonTab';
 export { default as ProblemNotFound } from './ProblemNotFound';
 export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as ChatAi } from './ChatAi';
+export { default as EditorialTab } from './EditorialTab';

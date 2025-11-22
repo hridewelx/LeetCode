@@ -8,6 +8,7 @@ import redisClient from "./config/redisDB.js";
 import problemRoutes from "./routes/problemsRoutes.js";
 import problemSubmissionRoutes from "./routes/problemSubmissionRoutes.js";
 import chatWithAiRoutes from "./routes/chatWithAiRoutes.js";
+import problemEditorialRoutes from "./routes/problemEditorialRoutes.js";
 
 const app = express();
 app.use(express.json());
@@ -18,6 +19,7 @@ app.use(cors({
 }));
 app.use("/user", authenticationRouter);
 app.use("/problems", problemRoutes);
+app.use("/editorial", problemEditorialRoutes);
 app.use("/submissions", problemSubmissionRoutes);
 app.use("/algoforgeai", chatWithAiRoutes);
 

@@ -27,11 +27,11 @@ const validateReferenceSolutions = async (
   ];
   for (const { language, code } of referenceSolution) {
     const languageId = getLanguageId(language);
-    // console.log("Visible Test Cases" ,visibleTestCases);
-    // console.log("Hidden Test Cases" ,hiddenTestCases);
-    // console.log("Code" ,code);
-    // console.log("Language" ,language);
-    // console.log("Language Id" ,languageId);
+    console.log("Visible Test Cases" ,visibleTestCases);
+    console.log("Hidden Test Cases" ,hiddenTestCases);
+    console.log("Code" ,code);
+    console.log("Language" ,language);
+    console.log("Language Id" ,languageId);
 
     // Create submission batch
     const createSubmissionBatch = visibleTestCases.map((element) => ({
@@ -90,7 +90,7 @@ const createProblem = async (req, res) => {
       hiddenTestCases
     );
     if (message) {
-      console.log("Submission Status", message);
+      // console.log("Submission Status", message);
       return res.status(400).json({ message });
     }
     await Problem.create({
@@ -214,6 +214,29 @@ const getProblemById = async (req, res) => {
   }
 };
 
+const getProblemByIdFetchedByAdmin = async (req, res) => {
+  const { id } = req.params;
+  try {
+    if (!id) {
+      return res.status(400).json({ message: "Problem id is required" });
+    }
+    const problem = await Problem.findById(id);
+    if (!problem) {
+      return res.status(404).json({ message: "Problem not found" });
+    }
+    return res
+      .status(200)
+      .json({ message: "Problem fetched successfully", problem });
+  } catch (error) {
+    console.log(error);
+    if (error.message === "Problem not found") {
+      return res.status(404).json({ message: "Problem not found" });
+    } else {
+      return res.status(400).json({ message: "Problem fetch failed" });
+    } 
+  }
+}
+
 const getAllProblems = async (req, res) => {
   try {
     const problems = await Problem.find({}).select("_id title difficulty tags");
@@ -300,6 +323,7 @@ export {
   deleteProblem,
   getAllProblems,
   getProblemById,
+  getProblemByIdFetchedByAdmin,
   individualSolvedProblems,
   individualProblemSubmissions,
   individualProblemAllSubmissions,

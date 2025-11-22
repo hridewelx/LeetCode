@@ -18,6 +18,7 @@ import {
   ProblemNotFound,
   LoadingSpinner,
   ChatAi,
+  EditorialTab,
 } from "../components/SolveProblem";
 
 const SolveProblem = () => {
@@ -540,6 +541,10 @@ const LeftPanel = ({
         <ProblemSubmissions submissions={submissionInfo} />
       )}
 
+      {activeTab === "editorial" && (
+        <EditorialTab problem={problem} />
+      )}
+
       {activeTab === "chatai" && (
         <ChatAi
           problem={problem}
@@ -566,7 +571,7 @@ const LeftPanel = ({
         />
       )}
 
-      {(activeTab === "editorial" || activeTab === "solutions") &&
+      {activeTab === "solutions" &&
         !showStickyNotes &&
         activeTab !== "notes" && <ComingSoonTab tabName={activeTab} />}
     </div>
